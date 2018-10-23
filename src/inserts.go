@@ -32,23 +32,7 @@ func listenForInput() {
 	case "help":
 		printCommands()
 	}
-
 }
-/*
-func writeInsert() {
-	file, err := os.Create("insert.sql")
-	if err != nil {
-		fmt.Errorf("some error %s", err)
-	}
-	insert := "insert into Notification values"
-	file.Write([]byte(insert))
-	for i := 0; i < 100; i++ {
-		value := strings.Join([]string{"(default, 101, " , strconv.Itoa(i) ,", default, default),"}, "'")
-		fmt.Println(value)
-		file.Write([]byte(value))
-	}
-	file.Write([]byte(";"))
-}*/
 
 func errHandle(err error) {
 	if err != nil {
@@ -68,16 +52,15 @@ func startGenerating(reader *bufio.Reader) {
 	tableName,_, err := reader.ReadLine()
 	errHandle(err)
 
-
-
+	
 	fmt.Println("Which attributes?")
 	fmt.Println("(enter in this format: att1, att2, att3")
 	attributes,_, err2 := reader.ReadLine()
 	attributes = append(attributes, ')')
 	errHandle(err2)
 
-	insert := strings.Join([]string{"insert into ", string(tableName), " (", string(attributes),  " values ("}, "")
-
+	insert := strings.Join([]string{"insert into ", string(tableName), " (", string(attributes),  " values "}, "")
+	inserts := []byte(insert)
 	fmt.Println(insert)
 
 	fmt.Println("How many entries?")
@@ -107,14 +90,38 @@ func startGenerating(reader *bufio.Reader) {
 	fmt.Println("Before removing comma")
 	fmt.Println(values)
 	lastValue := values[len(values)-1]
-	s := strings.Replace(lastValue, ",", ")", -1)
+	s := strings.Replace(lastValue, ",", "", -1)
 	values[len(values)-1] = s
+
+
+	writeToFile(inserts, values, numberOfEntriesInt)
+
 
 	fmt.Println("After removing comma", values)
 	//query := strings.Join(values, "")
 
-	insert = strings.Join([]string{insert, values[0], values[1]}, "")
+	//insert = strings.Join([]string{insert, values[0], values[1]}, "")
 
-	fmt.Println(insert)
+	//fmt.Println(insert)
+
+}
+func writeToFile(insert []byte, values []string, numberOfEntries int) {
+	file, err := os.Create("sql/deila.sql")
+	errHandle(err)
+
+	file.Write(insert)
+
+	val := strings.Join(values, "")
+	for i := 0; i < numberOfEntries; i++ {
+		if i == numberOfEntries-1 {
+			file.Write([]byte("("))
+			file.Write([]byte(val))
+			file.Write([]byte(");"))
+		} else {
+			file.Write([]byte("("))
+			file.Write([]byte(val))
+			file.Write([]byte("), "))
+		}
+	}
 
 }
